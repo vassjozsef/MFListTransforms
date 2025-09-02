@@ -1,0 +1,28 @@
+MFListTransform
+===============
+
+Based on https://github.com/sipsorcery/mediafoundationsamples/tree/master/MFListTransforms.
+
+Built with VS 2022.
+
+Results
+-------
+
+RTX NVIDIA 4090
+
+`MFVideoFormat_NV12` input and `MFT_ENUM_FLAG_HARDWARE` flag:
+| Name | GUID |
+|--|--|
+| NVIDIA H.264 Encoder MFT | {60F44560-5A20-4857-BFEF-D29773CB8040} |
+| NVIDIA AV1 Encoder MFT | {80B80715-8C5A-420D-B346-1A9DC40A5880} |
+| NVIDIA HEVC Encoder MFT | {966F107C-8EA2-425D-B822-E4A71BEF01D7} |
+
+`MFVideoFormat_IYUV` input and `MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT` flags:
+| Name | GUID |
+|--|--|
+| H264 Encoder MFT | {6CA50344-051A-4DED-9779-A43305165E35} |
+| WMVideo8 Encoder MFT | {7E320092-596A-41B2-BBEB-175D10504EB6} }
+| WMVideo9 Encoder MFT | {D23B90D0-144F-46BD-841D-59E4EB19DC59} }
+| Microsoft MPEG-2 Video Encoder MFT | {E6335F02-80B7-4DC4-ADFA-DFE7210D20D5} }
+| HEVCVideoExtensionEncoder | {00000000-0000-0000-0000-000000000000} }
+| VP9VideoExtensionEncoder | {00000000-0000-0000-0000-000000000000} }
