@@ -6,6 +6,11 @@
 #include <mferror.h>
 #include <mftransform.h>
 
+struct Codec {
+    std::string name;
+    GUID guid;
+};
+
 int main()
 {
     auto hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -22,49 +27,55 @@ int main()
     IMFActivate** ppActivate = NULL;
     UINT32 count = 0;
 
-    // hw: MFVideoFormat_NV12, sw: MFVideoFormat_IYUV
-    MFT_REGISTER_TYPE_INFO inputType = { MFMediaType_Video, MFVideoFormat_NV12 };
+    Codec encoders[] = { Codec{"H.264", MFVideoFormat_H264}, Codec{"HEVC", MFVideoFormat_HEVC}, Codec{"AV1", MFVideoFormat_AV1} };
 
-    hr = MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
-        MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT,
-        // MFT_ENUM_FLAG_HARDWARE,
-        &inputType,
-        nullptr,
-        &ppActivate,
-        &count);
-    if (FAILED(hr)) {
-        std::cout << "Media Foundation enumeration failed" << std::endl;
-    }
+    for (auto encoder : encoders) {
+        MFT_REGISTER_TYPE_INFO outputType = { MFMediaType_Video , encoder.guid };
 
-    std::cout << "Transforms: " << count << std::endl;
-
-    for (auto i = 0; i < count; i++) {
-        GUID guidMFT = { 0 };
-        auto hr = ppActivate[i]->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &guidMFT);
-        LPWSTR guid = nullptr;
-        hr = StringFromIID(guidMFT, &guid);
+        hr = MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
+            MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT,
+            // MFT_ENUM_FLAG_HARDWARE,
+            nullptr,
+            &outputType,
+            &ppActivate,
+            &count);
         if (FAILED(hr)) {
-            std::cerr << "Failed to get GUID string" <<  std::endl;
-            break;
+            std::cout << "Media Foundation enumeration failed" << std::endl;
         }
 
-        LPWSTR friendlyName = nullptr;
-        uint32_t length = 0;
-        hr = ppActivate[i]->GetAllocatedString(MFT_FRIENDLY_NAME_Attribute, &friendlyName, &length);
-        if FAILED(hr) {
-            std::cout << "Failed to get friendly name" << std::endl;
-            break;
+        std::cout << "Transforms for " << encoder.name << ": " << count << std::endl;
+
+        for (auto i = 0; i < count; i++) {
+            GUID guidMFT = { 0 };
+            auto hr = ppActivate[i]->GetGUID(MFT_TRANSFORM_CLSID_Attribute, &guidMFT);
+            if (FAILED(hr)) {
+              continue;
+            }
+            LPWSTR guid = nullptr;
+            hr = StringFromIID(guidMFT, &guid);
+            if (FAILED(hr)) {
+                std::cerr << "Failed to get GUID string" << std::endl;
+                break;
+            }
+
+            LPWSTR friendlyName = nullptr;
+            uint32_t length = 0;
+            hr = ppActivate[i]->GetAllocatedString(MFT_FRIENDLY_NAME_Attribute, &friendlyName, &length);
+            if FAILED(hr) {
+                std::cout << "Failed to get friendly name" << std::endl;
+                break;
+            }
+
+            std::wcout << friendlyName << ", GUID: " << guid << std::endl;
+
+            CoTaskMemFree(friendlyName);
+            CoTaskMemFree(guid);
         }
 
-        std::wcout << friendlyName << ", GUID: " << guid << std::endl;
-
-        CoTaskMemFree(friendlyName);
-        CoTaskMemFree(guid);
+        for (auto i = 0; i < count; i++)
+        {
+            ppActivate[i]->Release();
+        }
+        CoTaskMemFree(ppActivate);
     }
-
-    for (auto i = 0; i < count; i++)
-    {
-        ppActivate[i]->Release();
-    }
-    CoTaskMemFree(ppActivate);
 }
