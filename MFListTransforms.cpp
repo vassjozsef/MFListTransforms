@@ -33,8 +33,8 @@ int main()
         MFT_REGISTER_TYPE_INFO outputType = { MFMediaType_Video , encoder.guid };
 
         hr = MFTEnumEx(MFT_CATEGORY_VIDEO_ENCODER,
-            MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT,
-            // MFT_ENUM_FLAG_HARDWARE,
+            //MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_ASYNCMFT,
+            MFT_ENUM_FLAG_HARDWARE,
             nullptr,
             &outputType,
             &ppActivate,
@@ -55,7 +55,7 @@ int main()
             hr = StringFromIID(guidMFT, &guid);
             if (FAILED(hr)) {
                 std::cerr << "Failed to get GUID string" << std::endl;
-                break;
+                continue;
             }
 
             LPWSTR friendlyName = nullptr;
@@ -63,10 +63,17 @@ int main()
             hr = ppActivate[i]->GetAllocatedString(MFT_FRIENDLY_NAME_Attribute, &friendlyName, &length);
             if FAILED(hr) {
                 std::cout << "Failed to get friendly name" << std::endl;
-                break;
+                continue;
             }
 
-            std::wcout << friendlyName << ", GUID: " << guid << std::endl;
+            uint32_t flags = 0;
+            ppActivate[i]->GetUINT32(MF_TRANSFORM_FLAGS_Attribute, &flags);
+            if (FAILED(hr)) {
+                std::cout << "Failed to get flags" << std::endl;
+                continue;
+            }
+
+            std::wcout << friendlyName << ", GUID: " << guid << ", flags: " << flags << std::endl;
 
             CoTaskMemFree(friendlyName);
             CoTaskMemFree(guid);
